@@ -1,3 +1,4 @@
+import os
 from functools import wraps
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_file
@@ -8,10 +9,18 @@ from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 import io
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'change-this-to-something-random-later'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cems.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-this')
+
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///cems.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
