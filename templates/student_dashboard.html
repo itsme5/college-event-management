@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Student Dashboard</h2>
+        <div>
+            <span class="text-muted me-3">Logged in as {{ current_user.name }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <i class="bi bi-search fs-1 text-primary mb-3"></i>
+                <h5 class="fw-semibold">Browse Events</h5>
+                <p class="text-muted">Discover upcoming college events and register.</p>
+                <a href="{{ url_for('browse_events') }}" class="btn btn-primary btn-sm mt-auto">Browse Events</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <i class="bi bi-journal-check fs-1 text-primary mb-3"></i>
+                <h5 class="fw-semibold">My Registrations</h5>
+                <p class="text-muted">You are registered for {{ my_registrations_count }} event(s).</p>
+                <a href="{{ url_for('my_registrations') }}" class="btn btn-primary btn-sm mt-auto">My Events</a>
+            </div>
+        </div>
+    </div>
+
+    {% if recommended_events %}
+    <h4 class="fw-bold mb-3"><i class="bi bi-stars text-primary me-1"></i> Recommended for You</h4>
+    <div class="row g-4">
+        {% for event in recommended_events %}
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="fw-semibold">{{ event.title }}</h6>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-geo-alt me-1"></i>{{ event.location }}<br>
+                        <i class="bi bi-calendar-event me-1"></i>{{ event.event_date.strftime('%d %b %Y') }}
+                    </p>
+                    <p class="small flex-grow-1">{{ event.description[:80] }}{% if event.description|length > 80 %}...{% endif %}</p>
+                    <a href="{{ url_for('browse_events') }}" class="btn btn-outline-primary btn-sm mt-auto">View & Register</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

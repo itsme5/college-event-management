@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Reports & Analytics</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm text-center p-3">
+                <div class="fs-3 fw-bold text-primary">{{ total_events }}</div>
+                <div class="text-muted small">Total Events</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm text-center p-3">
+                <div class="fs-3 fw-bold text-primary">{{ total_students }}</div>
+                <div class="text-muted small">Total Students</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm text-center p-3">
+                <div class="fs-3 fw-bold text-primary">{{ total_registrations }}</div>
+                <div class="text-muted small">Total Registrations</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm text-center p-3">
+                <div class="fs-3 fw-bold text-primary">{{ attendance_rate }}%</div>
+                <div class="text-muted small">Attendance Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="fw-bold mb-3">Per-Event Breakdown</h4>
+    {% if events_summary %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded">
+            <thead class="table-light">
+                <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th>Capacity</th>
+                    <th>Registered</th>
+                    <th>Attended</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in events_summary %}
+                <tr>
+                    <td class="fw-semibold">{{ e.title }}</td>
+                    <td>{{ e.date.strftime('%d %b %Y') }}</td>
+                    <td>{{ e.capacity }}</td>
+                    <td>{{ e.registered }}</td>
+                    <td>{{ e.attended }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No events yet.</p>
+    {% endif %}
+
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-link mt-3">&larr; Back to Dashboard</a>
+</div>
+{% endblock %}

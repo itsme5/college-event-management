@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}My Registrations{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">My Registrations</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if registrations %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded">
+            <thead class="table-light">
+                <tr>
+                    <th>Event</th>
+                    <th>Location</th>
+                    <th>Date & Time</th>
+                    <th>Registered On</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reg in registrations %}
+                <tr>
+                    <td class="fw-semibold">{{ reg.event.title }}</td>
+                    <td>{{ reg.event.location }}</td>
+                    <td>{{ reg.event.event_date.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    <td>{{ reg.registered_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        {% if reg.attended %}
+                            <span class="badge bg-success">Attended</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Not attended</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if reg.attended %}
+                            <a href="{{ url_for('download_certificate', registration_id=reg.id) }}" class="btn btn-sm btn-outline-success me-1">
+                                <i class="bi bi-award"></i> Certificate
+                            </a>
+                        {% endif %}
+                        <form action="{{ url_for('unregister_from_event', event_id=reg.event.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Cancel this registration?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-journal-x fs-1"></i>
+        <p class="mt-2">You haven't registered for any events yet.</p>
+        <a href="{{ url_for('browse_events') }}" class="btn btn-primary mt-2">Browse Events</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

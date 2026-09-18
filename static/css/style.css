@@ -1,0 +1,29 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fc;
+}
+
+#mainNav {
+    background: linear-gradient(90deg, #4e54c8, #8f94fb);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    min-height: 70vh;
+    padding: 2rem 1rem;
+}
+
+.feature-card {
+    background: white;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(78, 84, 200, 0.15) !important;
+}
+
+footer {
+    background-color: #ffffff;
+    border-top: 1px solid #eee;
+}
