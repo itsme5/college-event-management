@@ -27,7 +27,7 @@ class Event(db.Model):
     event_date = db.Column(db.DateTime, nullable=False)
     capacity = db.Column(db.Integer, nullable=False, default=50)
     image_filename = db.Column(db.String(255), nullable=True)
-
+    category = db.Column(db.String(50), nullable=False, default="General")
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

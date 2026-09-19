@@ -2,7 +2,17 @@
 {% block title %}Browse Events{% endblock %}
 {% block content %}
 <div class="container py-5">
-    <h2 class="fw-bold mb-4">Upcoming Events</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="fw-bold mb-0">Upcoming Events</h2>
+        <form method="GET" class="d-flex gap-2">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -18,7 +28,10 @@
         <div class="col-md-6 col-lg-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="fw-semibold">{{ event.title }}</h5>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="fw-semibold">{{ event.title }}</h5>
+                        <span class="badge bg-info text-dark">{{ event.category }}</span>
+                    </div>
                     <p class="text-muted small mb-2">
                         <i class="bi bi-geo-alt me-1"></i>{{ event.location }}<br>
                         <i class="bi bi-calendar-event me-1"></i>{{ event.event_date.strftime('%d %b %Y, %I:%M %p') }}

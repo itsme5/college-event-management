@@ -23,6 +23,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Title</th>
+                    <th>Category</th>
                     <th>Location</th>
                     <th>Date & Time</th>
                     <th>Capacity</th>
@@ -33,6 +34,7 @@
                 {% for event in events %}
                 <tr>
                     <td class="fw-semibold">{{ event.title }}</td>
+                    <td><span class="badge bg-info text-dark">{{ event.category }}</span></td>
                     <td>{{ event.location }}</td>
                     <td>{{ event.event_date.strftime('%d %b %Y, %I:%M %p') }}</td>
                     <td>{{ event.capacity }}</td>

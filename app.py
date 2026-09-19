@@ -1,3 +1,4 @@
+
 import os
 from functools import wraps
 from datetime import datetime
@@ -10,6 +11,7 @@ from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 import io
 from dotenv import load_dotenv
+from collections import Counter
 
 load_dotenv()
 
@@ -29,6 +31,8 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
+
+EVENT_CATEGORIES = ["Technical", "Cultural", "Sports", "Workshop", "Social", "General"]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -87,6 +91,52 @@ def generate_certificate_pdf(user_name, event_title, event_date):
     c.save()
     buffer.seek(0)
     return buffer
+
+def get_recommendations_for_student(user_id, limit=3):
+    """
+    Content-based recommendation:
+    1. Look at categories of events the student has registered for (or attended).
+    2. Recommend upcoming events in those same categories, excluding ones already registered for.
+    3. If no history exists, fall back to soonest upcoming events overall.
+    """
+    my_registered_ids = {
+        r.event_id for r in Registration.query.filter_by(user_id=user_id).all()
+    }
+
+    past_categories = [
+        r.event.category for r in Registration.query.filter_by(user_id=user_id).all()
+    ]
+
+    upcoming_query = Event.query.filter(Event.event_date >= datetime.utcnow())
+    if my_registered_ids:
+        upcoming_query = upcoming_query.filter(~Event.id.in_(my_registered_ids))
+
+    if past_categories:
+        category_counts = Counter(past_categories)
+        top_categories = [cat for cat, _ in category_counts.most_common()]
+
+        recommended = []
+        for cat in top_categories:
+            matches = upcoming_query.filter(Event.category == cat).order_by(Event.event_date).all()
+            for m in matches:
+                if m not in recommended:
+                    recommended.append(m)
+            if len(recommended) >= limit:
+                break
+
+        if len(recommended) < limit:
+            fallback = upcoming_query.order_by(Event.event_date).all()
+            for f in fallback:
+                if f not in recommended:
+                    recommended.append(f)
+                if len(recommended) >= limit:
+                    break
+
+        reason = f"Based on your interest in {top_categories[0]} events" if recommended else None
+        return recommended[:limit], reason
+    else:
+        fallback = upcoming_query.order_by(Event.event_date).limit(limit).all()
+        return fallback, "Popular upcoming events"
 
 @app.route("/")
 def home():
@@ -149,23 +199,13 @@ def admin_dashboard():
 def student_dashboard():
     my_registrations_count = Registration.query.filter_by(user_id=current_user.id).count()
 
-    my_registered_ids = {
-        r.event_id for r in Registration.query.filter_by(user_id=current_user.id).all()
-    }
-
-    recommended_events = (
-        Event.query
-        .filter(~Event.id.in_(my_registered_ids) if my_registered_ids else True)
-        .filter(Event.event_date >= datetime.utcnow())
-        .order_by(Event.event_date)
-        .limit(3)
-        .all()
-    )
+    recommended_events, recommendation_reason = get_recommendations_for_student(current_user.id, limit=3)
 
     return render_template(
         "student_dashboard.html",
         my_registrations_count=my_registrations_count,
-        recommended_events=recommended_events
+        recommended_events=recommended_events,
+        recommendation_reason=recommendation_reason
     )
 
 # ---------------- EVENT MANAGEMENT (Admin only) ----------------
@@ -187,6 +227,7 @@ def create_event():
         location = request.form.get("location")
         event_date_str = request.form.get("event_date")
         capacity = request.form.get("capacity")
+        category = request.form.get("category", "General")
 
         try:
             event_date = datetime.strptime(event_date_str, "%Y-%m-%dT%H:%M")
@@ -200,6 +241,7 @@ def create_event():
             location=location,
             event_date=event_date,
             capacity=int(capacity) if capacity else 50,
+            category=category,
             created_by=current_user.id
         )
         db.session.add(new_event)
@@ -208,7 +250,7 @@ def create_event():
         flash("Event created successfully!", "success")
         return redirect(url_for("manage_events"))
 
-    return render_template("event_form.html", event=None)
+    return render_template("event_form.html", event=None, categories=EVENT_CATEGORIES)
 
 @app.route("/admin/events/<int:event_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -222,6 +264,7 @@ def edit_event(event_id):
         event.location = request.form.get("location")
         event_date_str = request.form.get("event_date")
         capacity = request.form.get("capacity")
+        event.category = request.form.get("category", "General")
 
         try:
             event.event_date = datetime.strptime(event_date_str, "%Y-%m-%dT%H:%M")
@@ -235,7 +278,7 @@ def edit_event(event_id):
         flash("Event updated successfully!", "success")
         return redirect(url_for("manage_events"))
 
-    return render_template("event_form.html", event=event)
+    return render_template("event_form.html", event=event, categories=EVENT_CATEGORIES)
 
 @app.route("/admin/events/<int:event_id>/delete", methods=["POST"])
 @login_required
@@ -319,13 +362,26 @@ def reports():
 @app.route("/events")
 @login_required
 def browse_events():
-    events = Event.query.order_by(Event.event_date).all()
+    category_filter = request.args.get("category", "")
+    query = Event.query
+
+    if category_filter:
+        query = query.filter_by(category=category_filter)
+
+    events = query.order_by(Event.event_date).all()
+
     my_registered_ids = set()
     if current_user.role == "student":
         my_registered_ids = {
             r.event_id for r in Registration.query.filter_by(user_id=current_user.id).all()
         }
-    return render_template("browse_events.html", events=events, my_registered_ids=my_registered_ids)
+    return render_template(
+        "browse_events.html",
+        events=events,
+        my_registered_ids=my_registered_ids,
+        categories=EVENT_CATEGORIES,
+        selected_category=category_filter
+    )
 
 @app.route("/events/<int:event_id>/register", methods=["POST"])
 @login_required

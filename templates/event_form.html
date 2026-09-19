@@ -26,6 +26,14 @@
                 <label class="form-label">Location</label>
                 <input type="text" name="location" class="form-control" value="{{ event.location if event else '' }}" required>
             </div>
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if event and event.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Date & Time</label>
